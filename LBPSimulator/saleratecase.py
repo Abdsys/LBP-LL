@@ -9,17 +9,17 @@ def calculate_price(usd_balance, ll_balance, ll_weight, usdc_weight, lot_size, s
     return price
 
 # Inputs
-initial_token_balance = 50000000
-initial_usd_balance = 300000
-start_weights = (0.99, 0.01)
-lot_size = 10000
-swap_fee = 0.02
-steps = 72  # 3 days, 24 hours each
+initial_token_balance = 50000000  # Initial token balance
+initial_usd_balance = 300000  # Placeholder value for USD balance
+start_weights = (0.99, 0.01)  # Starting weights for token and USD
+lot_size = 10000  # Size of each lot sold
+swap_fee = 0.02  # Swap fee as a percentage
+steps = 72  # Number of steps in the simulation
 
 # Create an empty list to store results
 results_list = []
 
-# Create an array of ending weights combinations
+# Create an array of ending weights combinations from (0.01, 0.99) to (0.5, 0.5)
 ending_weights_combinations = np.linspace((0.01, 0.99), (0.5, 0.5), 50)
 
 # Loop over different ending weights combinations
@@ -35,6 +35,8 @@ for end_weight in ending_weights_combinations:
         price_curve = []
         token_balances = [initial_token_balance]
         usd_balances = [initial_usd_balance]
+        total_tokens_sold = 0
+        total_usd_received = 0
 
         # Simulation over 3 days (72 hours)
         for day in range(3):
@@ -52,21 +54,22 @@ for end_weight in ending_weights_combinations:
                 # Ensure not to sell more than available tokens
                 hourly_sale_amount = min(hourly_sale_tokens[hour], token_balances[-1])
 
-                # Print hourly sale amount for verification
-                print(f"Day {day+1}, Hour {hour+1}: Sale Amount = {hourly_sale_amount:.2f} tokens")
-
-                # Update balances
+                # Update balances and total tokens sold
                 usd_received = hourly_sale_amount * price
                 new_token_balance = token_balances[-1] - hourly_sale_amount
                 new_usd_balance = usd_balances[-1] + usd_received
                 token_balances.append(new_token_balance)
                 usd_balances.append(new_usd_balance)
 
+                total_tokens_sold += hourly_sale_amount
+                total_usd_received += usd_received
+
                 price_curve.append(price)
 
-        # Calculate total proceeds and unsold tokens
-        total_proceeds = usd_balances[-1] - initial_usd_balance
+        # Calculate total proceeds, unsold tokens, and average price
+        total_proceeds = total_usd_received
         unsold_tokens = token_balances[-1]
+        average_price = total_proceeds / total_tokens_sold if total_tokens_sold > 0 else 0
 
         # Calculate the minimum price from the ending balances
         end_ll_weight = start_weights[0] + (end_weight[0] - start_weights[0])
@@ -80,6 +83,7 @@ for end_weight in ending_weights_combinations:
             'Sale Rate': total_sale_rate_percent,
             'Total Proceeds': total_proceeds,
             'Unsold Tokens': unsold_tokens,
+            'Average Price': average_price,
             'Min Price': min_price
         })
 

@@ -4,7 +4,6 @@ import pandas as pd
 def calculate_price(usd_balance, ll_balance, ll_weight, usdc_weight, lot_size, swap_fee):
     if ll_balance <= lot_size:
         return float('inf')  # Avoid division by zero
-
     price = (usd_balance * ((ll_balance / (ll_balance - lot_size)) ** (ll_weight / usdc_weight) - 1)) / \
             (1 - swap_fee) / lot_size
     return price
@@ -40,6 +39,7 @@ for end_weight in ending_weights_combinations:
         price_curve = []
         token_balances = [initial_token_balance]
         usd_balances = [initial_usd_balance]
+        total_tokens_sold = 0
 
         # Simulation over specified steps
         for step in range(steps):
@@ -49,22 +49,23 @@ for end_weight in ending_weights_combinations:
 
             # Calculate price
             price = calculate_price(usd_balances[-1], token_balances[-1], current_ll_weight, current_usdc_weight, lot_size, swap_fee)
-
             price_curve.append(price)
 
             # Simulate sales based on the hourly sale rate and current price
             tokens_sold = min(hourly_sale_tokens, token_balances[-1])  # Ensure we don't sell more tokens than available
             usd_received = tokens_sold * price
 
-            # Update balances
+            # Update balances and total tokens sold
             new_token_balance = token_balances[-1] - tokens_sold
             new_usd_balance = usd_balances[-1] + usd_received
             token_balances.append(new_token_balance)
             usd_balances.append(new_usd_balance)
+            total_tokens_sold += tokens_sold
 
-        # Calculate total proceeds and unsold tokens
+        # Calculate total proceeds, unsold tokens, and average price
         total_proceeds = usd_balances[-1] - initial_usd_balance
         unsold_tokens = token_balances[-1]
+        average_price = total_proceeds / total_tokens_sold if total_tokens_sold > 0 else 0
 
         # Calculate the minimum price from the ending balances (last step)
         end_ll_weight = start_weights[0] + (end_weight[0] - start_weights[0])
@@ -78,6 +79,7 @@ for end_weight in ending_weights_combinations:
             'Sale Rate': total_sale_rate_percent,
             'Total Proceeds': total_proceeds,
             'Unsold Tokens': unsold_tokens,
+            'Average Price': average_price,
             'Min Price': min_price
         })
 
