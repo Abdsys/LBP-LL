@@ -15,13 +15,13 @@ def calculate_price(usd_balance, ll_balance, ll_weight, usdc_weight, lot_size, s
 initial_token_balance = 50000000  # Initial token balance
 initial_usd_balance = 300000  # Placeholder value for USD balance
 start_weights = (0.99, 0.01)  # Starting weights for token and USD
-end_weights = (0.01, 0.99)  # Ending weights for token and USD
+end_weights = (0.2, 0.8)  # Ending weights for token and USD
 lot_size = 10000  # Size of each lot sold
 swap_fee = 0.02  # Swap fee as a percentage
 steps = 72  # Number of steps in the simulation
 
 # Create an array of sale rates from 0% to 100% with increments of 20%
-sale_rates = np.arange(0.01, 1.01, 0.1)
+sale_rates = np.arange(0.5, 0.99, 0.1)
 
 # Create an empty list to store results
 results_list = []
